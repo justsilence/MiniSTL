@@ -1,10 +1,13 @@
 #ifndef STRING_H__
 #define STRING_H__
 
+#include <iostream>
 #include <memory>
 #include <utility>
 
+namespace MiniSTL {
     class string {
+        friend std::ostream& operator<<(std::ostream &os, const string& str);
         public:
             typedef std::size_t size_type;
             typedef char value_type;
@@ -15,8 +18,8 @@
             string() : elem(nullptr), first_free(nullptr), cap(nullptr) { }
             string(const string &);
             string& operator=(const string &);
-            // string& operator=(const char *);
-            // string& operator=(char);
+            string& operator=(const char *);
+            string& operator=(char);
             ~string();
 
             void push_back(const char &);
@@ -133,6 +136,20 @@
         return *this;
     }
 
+    string& string::operator=(const char *c) {
+        auto data = alloc_n_copy(c, c + strlen(c));
+        free();
+        elem = data.first;
+        first_free = cap = data.second;
+        return *this;
+    }
+
+    string& string::operator=(char c) {
+        free();
+        alloc.construct(first_free++, c);
+        return *this;
+    }
+
     string::~string() {
         free();
     }
@@ -149,8 +166,13 @@
         cap = elem + newcapacity;
     }
 
+    std::ostream& operator<<(std::ostream& os, const string& str) {
+        for (auto const ch : str) 
+            os << ch;
+        return os;
+    }
 
-
+}
 
 
 
