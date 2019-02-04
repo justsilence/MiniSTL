@@ -17,7 +17,9 @@ namespace MiniSTL {
 
             string() : elem(nullptr), first_free(nullptr), cap(nullptr) { }
             string(const char *);
+
             string(const string &);
+            string(string &&);
             string& operator=(const string &);
             string& operator=(const char *);
             string& operator=(char);
@@ -93,9 +95,6 @@ namespace MiniSTL {
             char *first_free;
             char *cap;
 
-
-
-
     };
 
     std::allocator<char> string::alloc;
@@ -133,6 +132,12 @@ namespace MiniSTL {
         auto newdata = alloc_n_copy(s.begin(), s.end());
         elem = newdata.first;
         first_free = cap = newdata.second;
+    }
+
+    string::string(string &&s) {
+        auto newdata = alloc_n_copy(s.begin(), s.end());
+        elem = std::move(newdata.first);
+        first_free = cap = std::move(newdata.second);
     }
 
     string& string::operator=(const string& right) {
