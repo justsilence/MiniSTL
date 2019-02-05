@@ -105,6 +105,7 @@ namespace MiniSTL {
             std::pair<char*, char*> alloc_n_copy(const char* , const char* );
             void free();
             void reallocate();
+            void reallocate(size_t);
             char *elem;
             char *first_free;
             char *cap;
@@ -188,12 +189,50 @@ namespace MiniSTL {
         return *this;
     }
 
+    string& string::operator+=(const string& s) {
+        size_t new_size = s.size() + size();
+        if (capacity() < new_size) 
+            reallocate(new_size);
+        for (int i = 0; i < s.size(); ++i) 
+            alloc.construct(first_free++, s[i]);
+        return *this;
+    }
+
+    string& string::operator+=(const char* s) {
+        size_t new_size = size() + strlen(s);
+        if (capacity() < new_size) 
+            reallocate(new_size);
+        for (int i = 0; i < strlen(s); ++i) 
+            alloc.construct(first_free++, s[i]);
+        return *this;
+    }
+
+    string& string::operator+=(char c) {
+        size_t new_size = size() + 1;
+        if (capacity() < new_size)
+            reallocate(new_size);
+        alloc.construct(first_free++, c);
+        return *this;
+    }
+
     string::~string() {
         free();
     }
 
     void string::reallocate() {
         auto newcapacity = size() ? 2 * size() : 1;
+        auto newdata = alloc.allocate(newcapacity);
+        auto dest = newdata;
+        auto e = elem;
+        for (std::size_t i = 0; i != size(); ++i) 
+            alloc.construct(dest++, std::move(*e++));
+        elem = newdata;
+        first_free = dest;
+        cap = elem + newcapacity;
+    }
+
+    void string::reallocate(size_t n) {
+        auto newcapacity = 2 * n;
         auto newdata = alloc.allocate(newcapacity);
         auto dest = newdata;
         auto e = elem;
