@@ -17,16 +17,28 @@ namespace MiniSTL {
 
             string() : elem(nullptr), first_free(nullptr), cap(nullptr) { }
             string(const char *);
-
+            string(size_t, char);
             string(const string &);
             string(string &&);
             string& operator=(const string &);
             string& operator=(const char *);
             string& operator=(char);
+            char& operator[](size_t n) {
+                return elem[n];
+            }
+            const char& operator[](size_t n) const {
+                return elem[n];
+            }
+            string& operator+=(const string &s);
+            string& operator+=(const char* );
+            string& operator+=(char );
+
+
             ~string();
 
             void push_back(const char &);
             void push_back(char &&);
+            void pop_back();
 
             const char front() const {
                 return *elem;
@@ -80,6 +92,8 @@ namespace MiniSTL {
                 free();
             }
 
+            const char* c_str() const;
+
 
 
         private:
@@ -109,6 +123,12 @@ namespace MiniSTL {
         alloc.construct(first_free++, std::move(c));
     }
 
+    void string::pop_back() {
+        if (elem) {
+            alloc.destroy(--first_free);
+        }
+    }
+
     std::pair<char*, char*> string::alloc_n_copy(const char* b, const char* e) {
         auto data = alloc.allocate(e - b);
         return {data, std::uninitialized_copy(b, e, data)};
@@ -118,6 +138,12 @@ namespace MiniSTL {
         auto newdata = alloc_n_copy(c, c + strlen(c));
         elem = newdata.first;
         first_free = cap = newdata.second;
+    }
+
+    string::string(size_t sz, char c) {
+        elem = alloc.allocate(sz);
+        first_free = std::uninitialized_fill_n(elem, sz, c);
+        cap = first_free;
     }
 
     void string::free() {
@@ -176,6 +202,16 @@ namespace MiniSTL {
         elem = newdata;
         first_free = dest;
         cap = elem + newcapacity;
+    }
+
+    const char* string::c_str() const {
+        char* arr = new char[size() + 1];
+        char* curr = elem;
+        for (int i = 0; i < size(); ++i) {
+            arr[i] = *(curr++);
+        }
+        arr[size()] = '\0';
+        return arr;
     }
 
     std::ostream& operator<<(std::ostream& os, const string& str) {
